@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>PlastiSort VR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- LANGKAH 1: library A-Frame (mesin VR). Cukup satu baris ini. -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+</head>
+<body>
+
+<!-- LANGKAH 2: adegan 3D. Semua benda VR ada di dalam <a-scene>. -->
+<a-scene id="scene" renderer="colorManagement: true" vr-mode-ui="enterVRButton: #btn-vr">
+
+  <!-- Cahaya -->
+  <a-entity light="type: ambient; color: #ffffff; intensity: 0.65"></a-entity>
+  <a-entity light="type: directional; color: #fff4e0; intensity: 0.75" position="1 4 2"></a-entity>
+  <a-entity light="type: point; color: #ffe9c4; intensity: 0.6; distance: 8" position="0 3.6 -1.5"></a-entity>
+
+  <!-- Pabrik: langit gelap di luar, lantai beton, dinding, langit-langit -->
+  <a-sky color="#26323d"></a-sky>
+  <a-plane position="0 0 -2" rotation="-90 0 0" width="9" height="9" color="#7b8794"></a-plane>
+  <!-- garis kuning keselamatan di lantai -->
+  <a-plane position="0 0.005 -0.55" rotation="-90 0 0" width="4.2" height="0.07" color="#f4c20d"></a-plane>
+  <a-plane position="0 0.005 -3.0" rotation="-90 0 0" width="4.2" height="0.07" color="#f4c20d"></a-plane>
+  <!-- dinding belakang + kiri + kanan -->
+  <a-plane position="0 2.0 -4" width="9" height="4" color="#e3e9ee"></a-plane>
+  <a-plane position="0 0.55 -3.98" width="9" height="1.1" color="#1f4e79"></a-plane>
+  <a-plane position="-4.5 2.0 -2" rotation="0 90 0" width="9" height="4" color="#cfd8df"></a-plane>
+  <a-plane position="4.5 2.0 -2" rotation="0 -90 0" width="9" height="4" color="#cfd8df"></a-plane>
+  <a-plane position="0 4 -2" rotation="90 0 0" width="9" height="9" color="#9aa5b0"></a-plane>
+  <a-text value="PABRIK DAUR ULANG PLASTIK" position="0 3.3 -3.95" align="center" width="8" color="#1f4e79"></a-text>
+  <!-- jendela -->
+  <a-box position="-2.6 2.3 -3.96" width="1.4" height="1" depth="0.04" color="#a9d8f5" material="emissive: #6fb7e6; emissiveIntensity: 0.5"></a-box>
+  <a-box position="2.6 2.3 -3.96" width="1.4" height="1" depth="0.04" color="#a9d8f5" material="emissive: #6fb7e6; emissiveIntensity: 0.5"></a-box>
+  <!-- lampu langit-langit -->
+  <a-box position="-1.5 3.95 -1.5" width="1.2" height="0.06" depth="0.3" color="#ffffff" material="emissive: #fff6dd; emissiveIntensity: 1"></a-box>
+  <a-box position="1.5 3.95 -1.5" width="1.2" height="0.06" depth="0.3" color="#ffffff" material="emissive: #fff6dd; emissiveIntensity: 1"></a-box>
+  <!-- pipa -->
+  <a-cylinder position="0 3.6 -3.8" rotation="0 0 90" radius="0.1" height="9" color="#95a5a6"></a-cylinder>
+  <a-cylinder position="0 3.3 -3.8" rotation="0 0 90" radius="0.06" height="9" color="#c0392b"></a-cylinder>
+  <!-- rak dengan peti di sisi kiri dan kanan -->
+  <a-box position="-3.6 0.9 -2.8" width="1.2" height="0.08" depth="0.5" color="#7f8c8d"></a-box>
+  <a-box position="-3.6 1.6 -2.8" width="1.2" height="0.08" depth="0.5" color="#7f8c8d"></a-box>
+  <a-box position="-3.6 0.45 -2.8" width="0.08" height="0.9" depth="0.5" color="#566573"></a-box>
+  <a-box position="-3.6 1.15 -2.8" width="0.5" height="0.4" depth="0.4" color="#c8a165"></a-box>
+  <a-box position="-3.3 1.85 -2.8" width="0.4" height="0.4" depth="0.4" color="#b98e55"></a-box>
+  <a-box position="3.6 0.9 -2.8" width="1.2" height="0.08" depth="0.5" color="#7f8c8d"></a-box>
+  <a-box position="3.6 1.6 -2.8" width="1.2" height="0.08" depth="0.5" color="#7f8c8d"></a-box>
+  <a-box position="3.6 0.45 -2.8" width="0.08" height="0.9" depth="0.5" color="#566573"></a-box>
+  <a-box position="3.4 1.15 -2.8" width="0.5" height="0.4" depth="0.4" color="#c8a165"></a-box>
+  <a-box position="3.7 1.85 -2.8" width="0.4" height="0.4" depth="0.4" color="#b98e55"></a-box>
+
+  <!-- Konveyor (sabuk berjalan) sebagai meja kerja -->
+  <a-box position="0 0.74 -1.4" width="2.9" height="0.08" depth="0.9" color="#2b3138"></a-box>
+  <a-box position="0 0.8 -1.4" width="2.9" height="0.02" depth="0.7" color="#3b434c"></a-box>
+  <a-box position="0 0.77 -0.93" width="2.95" height="0.1" depth="0.05" color="#aab7c0"></a-box>
+  <a-box position="0 0.77 -1.87" width="2.95" height="0.1" depth="0.05" color="#aab7c0"></a-box>
+  <a-cylinder position="-1.45 0.74 -1.4" rotation="90 0 0" radius="0.08" height="0.92" color="#7f8c8d"></a-cylinder>
+  <a-cylinder position="1.45 0.74 -1.4" rotation="90 0 0" radius="0.08" height="0.92" color="#7f8c8d"></a-cylinder>
+  <a-box position="-1.3 0.35 -1.4" width="0.08" height="0.7" depth="0.8" color="#566573"></a-box>
+  <a-box position="1.3 0.35 -1.4" width="0.08" height="0.7" depth="0.8" color="#566573"></a-box>
+  <a-box position="0 0.2 -1.4" width="2.6" height="0.05" depth="0.06" color="#566573"></a-box>
+
+  <!-- 3 tempat sampah: PET (1), HDPE (2), PP (5) -->
+  <a-entity id="bins"></a-entity>
+
+  <!-- Panel menu / hasil + HUD (diisi lewat JavaScript) -->
+  <a-entity id="panel" position="0 1.65 -1.9"></a-entity>
+  <a-entity id="hud" position="0 2.55 -2.0" visible="false">
+    <a-plane width="3.4" height="0.95" color="#13202b" opacity="0.8" position="0 -0.12 -0.01"></a-plane>
+    <a-text id="hud-score" value="Skor: 0" position="-0.85 0.1 0" align="center" width="3.2" color="#ffffff"></a-text>
+    <a-text id="hud-time" value="Waktu: 60" position="0.85 0.1 0" align="center" width="3.2" color="#ffffff"></a-text>
+    <a-text id="hud-fb" value="" position="0 -0.3 0" align="center" width="3.1" wrap-count="42" color="#ffffff"></a-text>
+  </a-entity>
+
+  <!-- Kamera + kursor mouse (untuk dites di laptop/HP) -->
+  <a-entity id="rig" position="0 0 0">
+    <a-camera id="cam" position="0 1.6 0" wasd-controls="enabled: false"></a-camera>
+  </a-entity>
+  <a-entity cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
+
+  <!-- Controller VR (Quest dsb): tekan trigger = klik -->
+  <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
+  <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
+</a-scene>
+
+<button id="btn-vr" style="position:fixed;right:12px;bottom:12px;z-index:9;padding:10px 16px;border:0;border-radius:8px;background:#27ae60;color:#fff;font:bold 15px sans-serif">MASUK VR</button>
+
+<script>
+/* ============================================================
+   PLASTISORT VR - logika permainan
+   Alur: menu -> main -> hasil
+   ============================================================ */
+
+// ---------- DATA ----------
+// kode resin: PET = 1, HDPE = 2, PP = 5
+var TYPES = {
+  PET:  { code: 1, color: '#2f80ed' },
+  HDPE: { code: 2, color: '#27ae60' },
+  PP:   { code: 5, color: '#f2994a' }
+};
+
+// geo: bentuk 3D sederhana. h = tinggi (untuk menaruh di meja)
+var POOL = [
+  { name: 'Botol air mineral', type: 'PET',  geo: 'cyl',  h: 0.28, r: 0.05, color: '#a9d6f5' },
+  { name: 'Botol soda',        type: 'PET',  geo: 'cyl',  h: 0.32, r: 0.055, color: '#7fc8a9' },
+  { name: 'Botol jus',         type: 'PET',  geo: 'cyl',  h: 0.24, r: 0.05, color: '#f5c46b' },
+  { name: 'Botol deterjen',    type: 'HDPE', geo: 'box',  h: 0.30, w: 0.14, color: '#e8e8f0' },
+  { name: 'Jeriken',           type: 'HDPE', geo: 'box',  h: 0.30, w: 0.2,  color: '#f3f0c8' },
+  { name: 'Botol susu',        type: 'HDPE', geo: 'cyl',  h: 0.26, r: 0.06, color: '#ffffff' },
+  { name: 'Gelas plastik',     type: 'PP',   geo: 'cone', h: 0.14, r: 0.06, color: '#f2f2f2' },
+  { name: 'Wadah makanan',     type: 'PP',   geo: 'flat', h: 0.08, w: 0.22, color: '#e74c3c' },
+  { name: 'Sedotan',           type: 'PP',   geo: 'cyl',  h: 0.30, r: 0.015, color: '#f1c40f' }
+];
+
+var ROUND_ITEMS = 6;     // jumlah sampah tiap ronde
+var ROUND_TIME = 60;     // detik
+var POINTS = 10;
+
+// ---------- STATE ----------
+var S = { mode: 'menu', score: 0, right: 0, wrong: 0, time: ROUND_TIME,
+          left: 0, selected: null, timer: null };
+
+var $ = function (id) { return document.getElementById(id); };
+var scene = $('scene');
+
+// ---------- UTIL ----------
+function el(tag, attrs, parent) {
+  var e = document.createElement(tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+function shuffle(a) {
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+// ---------- PAPAN SKOR (localStorage, aman kalau diblokir) ----------
+function loadBoard() {
+  try { return JSON.parse(localStorage.getItem('plastisort_lb') || '[]'); }
+  catch (e) { return []; }
+}
+function saveScore(sc) {
+  var b = loadBoard();
+  b.push(sc);
+  b.sort(function (x, y) { return y - x; });
+  b = b.slice(0, 3);
+  try { localStorage.setItem('plastisort_lb', JSON.stringify(b)); } catch (e) {}
+  return b;
+}
+
+// ---------- TEMPAT SAMPAH ----------
+function buildBins() {
+  var holder = $('bins');
+  ['PET', 'HDPE', 'PP'].forEach(function (t, i) {
+    var x = (i - 1) * 1.6;
+    var bin = el('a-cylinder', {
+      'class': 'clickable bin', 'data-type': t,
+      position: x + ' 0.75 -2.4', radius: 0.38, height: 1.5,
+      color: TYPES[t].color,
+      'animation__pop': 'property: scale; from: 1.12 1.12 1.12; to: 1 1 1; dur: 320; easing: easeOutBack; startEvents: pop'
+    }, holder);
+    // tutup + lubang masuk
+    el('a-cylinder', { radius: 0.42, height: 0.07, position: '0 0.78 0', color: '#2c3e50' }, bin);
+    el('a-cylinder', { radius: 0.28, height: 0.02, position: '0 0.8 0', color: '#0b0f12' }, bin);
+    // garis pita putih + papan nama
+    el('a-cylinder', { radius: 0.385, height: 0.05, position: '0 0.2 0', color: '#ffffff', opacity: 0.85 }, bin);
+    el('a-cylinder', { radius: 0.385, height: 0.05, position: '0 -0.5 0', color: '#ffffff', opacity: 0.85 }, bin);
+    el('a-box', { width: 0.55, height: 0.36, depth: 0.02, position: '0 0.5 0.385', color: '#10202e' }, bin);
+    el('a-text', { value: t, align: 'center', width: 1.9, color: '#ffffff', position: '0 0.55 0.4' }, bin);
+    el('a-text', { value: 'kode ' + TYPES[t].code, align: 'center', width: 1.3, color: '#ffd95a', position: '0 0.42 0.4' }, bin);
+    // bayangan di lantai
+    el('a-circle', { radius: 0.5, rotation: '-90 0 0', position: x + ' 0.01 -2.4', color: '#000000', opacity: 0.25 }, holder);
+  });
+}
+
+// ---------- SAMPAH ----------
+function makeItem(def, x) {
+  var y = 0.78 + def.h / 2;
+  var common = { 'class': 'clickable item', 'data-name': def.name, 'data-type': def.type,
+                 'data-y': y, position: x + ' ' + y + ' -1.4', color: def.color };
+  var e;
+  if (def.geo === 'cyl') {
+    common.radius = def.r; common.height = def.h; e = el('a-cylinder', common, $('scene'));
+  } else if (def.geo === 'cone') {
+    common['radius-bottom'] = def.r * 0.7; common['radius-top'] = def.r; common.height = def.h;
+    e = el('a-cone', common, $('scene'));
+  } else if (def.geo === 'flat') {
+    common.width = def.w; common.height = def.h; common.depth = def.w * 0.7;
+    e = el('a-box', common, $('scene'));
+  } else {
+    common.width = def.w; common.height = def.h; common.depth = def.w * 0.7;
+    e = el('a-box', common, $('scene'));
+  }
+  // tutup botol (hiasan, bukan target klik)
+  if (def.geo === 'cyl' && def.r > 0.03) {
+    el('a-cylinder', { radius: def.r * 0.45, height: 0.04, color: '#d35400',
+                       position: '0 ' + (def.h / 2 + 0.02) + ' 0' }, e);
+  }
+  return e;
+}
+function clearItems() {
+  var list = scene.querySelectorAll('.item');
+  for (var i = 0; i < list.length; i++) list[i].parentNode.removeChild(list[i]);
+}
+function spawnItems() {
+  clearItems();
+  var picks = shuffle(POOL.slice()).slice(0, ROUND_ITEMS);
+  var gap = 2.2 / (ROUND_ITEMS - 1);
+  picks.forEach(function (d, i) { makeItem(d, -1.1 + i * gap); });
+  S.left = ROUND_ITEMS;
+}
+function deselect() {
+  if (!S.selected) return;
+  var it = S.selected;
+  it.setAttribute('material', 'emissive', '#000000');
+  it.setAttribute('position', { x: it.object3D.position.x, y: parseFloat(it.getAttribute('data-y')), z: -1.4 });
+  S.selected = null;
+}
+function select(it) {
+  deselect();
+  S.selected = it;
+  sfx('pick');
+  it.setAttribute('material', { emissive: '#ffee00', emissiveIntensity: 0.7 });
+  it.setAttribute('position', { x: it.object3D.position.x, y: parseFloat(it.getAttribute('data-y')) + 0.12, z: -1.4 });
+}
+
+// ---------- HUD ----------
+function feedback(msg, ok) {
+  var t = $('hud-fb');
+  t.setAttribute('value', msg);
+  t.setAttribute('color', ok ? '#58d68d' : '#ff6b5e');
+}
+function updateHud() {
+  $('hud-score').setAttribute('value', 'Skor: ' + S.score);
+  $('hud-time').setAttribute('value', 'Waktu: ' + S.time);
+  $('hud-time').setAttribute('color', S.time <= 10 ? '#ff6b5e' : '#ffffff');
+}
+
+// ---------- PANEL (menu & hasil) ----------
+function button(label, act, x, y, color) {
+  var b = el('a-plane', { 'class': 'clickable btn', 'data-act': act, width: 0.9, height: 0.28,
+                          position: x + ' ' + y + ' 0.02', color: color }, $('panel'));
+  el('a-text', { value: label, align: 'center', width: 2.2, color: '#ffffff', position: '0 0 0.01' }, b);
+}
+function drawPanelBase(title) {
+  var p = $('panel');
+  clear(p);
+  el('a-plane', { width: 2.6, height: 1.7, color: '#1f2d3d', opacity: 0.93 }, p);
+  el('a-text', { value: title, align: 'center', width: 3.4, color: '#ffffff', position: '0 0.65 0.02' }, p);
+}
+function showMenu() {
+  S.mode = 'menu';
+  $('hud').setAttribute('visible', false);
+  clearItems();
+  drawPanelBase('PLASTISORT VR');
+  var p = $('panel');
+  el('a-text', {
+    value: 'Pilah sampah plastik ke tempat yang benar!\n\n' +
+           'PET (1): botol minuman\nHDPE (2): botol deterjen/susu, jeriken\nPP (5): gelas, wadah makanan, sedotan\n\n' +
+           'Klik sampah, lalu klik tempat sampahnya.',
+    align: 'center', width: 2.3, "wrap-count": 46, color: '#dfe9f3', position: '0 0.05 0.02'
+  }, p);
+  button('MULAI', 'start', 0, -0.62, '#27ae60');
+}
+function showResult() {
+  S.mode = 'result';
+  $('hud').setAttribute('visible', false);
+  clearItems();
+  var board = saveScore(S.score);
+  drawPanelBase('HASIL');
+  var p = $('panel');
+  var lines = 'Skor: ' + S.score + '    Benar: ' + S.right + '    Salah: ' + S.wrong + '\n\nPAPAN SKOR';
+  board.forEach(function (s, i) { lines += '\n' + (i + 1) + '.  ' + s; });
+  el('a-text', { value: lines, align: 'center', width: 2.3, "wrap-count": 46, color: '#ffffff', position: '0 0.1 0.02' }, p);
+  button('ULANGI', 'start', -0.5, -0.62, '#27ae60');
+  button('MENU', 'menu', 0.5, -0.62, '#7f8c8d');
+}
+
+// ---------- ALUR PERMAINAN ----------
+function startGame() {
+  S.mode = 'play'; S.score = 0; S.right = 0; S.wrong = 0; S.time = ROUND_TIME; S.selected = null;
+  clear($('panel'));
+  spawnItems();
+  $('hud').setAttribute('visible', true);
+  feedback('Klik sampah, lalu klik tempat sampahnya', true);
+  updateHud();
+  clearInterval(S.timer);
+  S.timer = setInterval(function () {
+    S.time--; updateHud();
+    if (S.time <= 0) endGame();
+  }, 1000);
+}
+function endGame() {
+  clearInterval(S.timer);
+  sfx('end');
+  showResult();
+}
+// ---- suara sederhana (tanpa file, dibuat dengan WebAudio) ----
+var AC = null;
+function tone(freq, start, dur, type, vol) {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    var t0 = AC.currentTime + start;
+    g.gain.setValueAtTime(vol || 0.15, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.02);
+  } catch (e) {}
+}
+function sfx(kind) {
+  if (kind === 'ok')     { tone(660, 0, 0.12); tone(880, 0.11, 0.2); }
+  if (kind === 'bad')    { tone(170, 0, 0.3, 'square', 0.1); }
+  if (kind === 'pick')   { tone(520, 0, 0.06, 'triangle', 0.1); }
+  if (kind === 'end')    { tone(520, 0, 0.15); tone(390, 0.15, 0.15); tone(260, 0.3, 0.3); }
+}
+
+// kedip tempat sampah + teks melayang (+10 / X)
+function flashBin(bin, ok) {
+  bin.setAttribute('material', { emissive: ok ? '#2ecc71' : '#e74c3c', emissiveIntensity: 0.9 });
+  bin.emit('pop');
+  setTimeout(function () { bin.setAttribute('material', { emissive: '#000000', emissiveIntensity: 0 }); }, 380);
+  var x = bin.object3D.position.x;
+  var pop = el('a-text', { value: ok ? '+' + POINTS : 'SALAH', align: 'center', width: 4,
+    color: ok ? '#58d68d' : '#ff6b5e', position: x + ' 1.9 -2.0',
+    animation: 'property: position; to: ' + x + ' 2.4 -2.0; dur: 800; easing: easeOutQuad' }, scene);
+  setTimeout(function () { if (pop.parentNode) pop.parentNode.removeChild(pop); }, 900);
+}
+
+function judge(bin) {
+  var it = S.selected;
+  if (!it) { feedback('Pilih sampah dulu!', false); sfx('bad'); return; }
+  var name = it.getAttribute('data-name');
+  var real = it.getAttribute('data-type');
+  var guess = bin.getAttribute('data-type');
+  var ok = (real === guess);
+  if (ok) {
+    S.score += POINTS; S.right++;
+    feedback('Benar! ' + name + ' = ' + real + ' (kode ' + TYPES[real].code + ')', true);
+  } else {
+    S.wrong++;
+    feedback('Salah. ' + name + ' itu ' + real + ' (kode ' + TYPES[real].code + '), bukan ' + guess, false);
+  }
+  sfx(ok ? 'ok' : 'bad');
+  flashBin(bin, ok);
+  // sampah melayang ke tempat sampah lalu hilang
+  it.classList.remove('clickable');
+  it.setAttribute('material', 'emissive', '#000000');
+  var bx = bin.object3D.position.x;
+  it.setAttribute('animation__fly', 'property: position; to: ' + bx + ' 1.6 -2.4; dur: 380; easing: easeInQuad');
+  setTimeout(function () { if (it.parentNode) it.parentNode.removeChild(it); }, 400);
+  S.selected = null; S.left--;
+  updateHud();
+  if (S.left <= 0) setTimeout(endGame, 900);
+}
+
+// ---------- KLIK (satu pintu untuk mouse, controller, dan tatapan) ----------
+scene.addEventListener('click', function (ev) {
+  var t = ev.target;
+  if (!t || !t.classList) return;
+  if (t.classList.contains('btn')) {
+    var act = t.getAttribute('data-act');
+    if (act === 'start') startGame();
+    if (act === 'menu') showMenu();
+  } else if (S.mode === 'play' && t.classList.contains('item')) {
+    select(t);
+  } else if (S.mode === 'play' && t.classList.contains('bin')) {
+    judge(t);
+  }
+});
+
+// efek sorot saat kursor di atas benda
+scene.addEventListener('mouseenter', function (ev) {
+  var t = ev.target;
+  if (t && t.classList && t.classList.contains('bin')) t.setAttribute('scale', '1.06 1.06 1.06');
+});
+scene.addEventListener('mouseleave', function (ev) {
+  var t = ev.target;
+  if (t && t.classList && t.classList.contains('bin')) t.setAttribute('scale', '1 1 1');
+});
+
+// ---------- MODE VR: kursor tatap (gaze) untuk Cardboard ----------
+var gotController = false, gaze = null;
+scene.addEventListener('controllerconnected', function () { gotController = true; });
+scene.addEventListener('enter-vr', function () {
+  setTimeout(function () {
+    if (gotController || gaze) return;
+    gaze = el('a-entity', {
+      cursor: 'fuse: true; fuseTimeout: 1200',
+      raycaster: 'objects: .clickable',
+      position: '0 0 -1',
+      geometry: 'primitive: ring; radiusInner: 0.012; radiusOuter: 0.02',
+      material: 'color: #ffffff; shader: flat'
+    }, $('cam'));
+  }, 1500);
+});
+scene.addEventListener('exit-vr', function () {
+  if (gaze) { gaze.parentNode.removeChild(gaze); gaze = null; }
+});
+
+// ---------- MULAI ----------
+buildBins();
+showMenu();
+</script>
+</body>
+</html>
