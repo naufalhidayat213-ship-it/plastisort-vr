@@ -90,8 +90,31 @@
 <script>
 /* ============================================================
    PLASTISORT VR - logika permainan
-   Alur: menu -> main -> hasil
+   Alur: menu -> (panduan / kuis / papan skor / pengaturan) -> main -> hasil
    ============================================================ */
+
+// ---------- KOMPONEN: sesuaikan ukuran model 3D otomatis ----------
+// Apa pun ukuran model aslinya, dibuat setinggi "h" dan alasnya menempel di dasar.
+AFRAME.registerComponent('fit-height', {
+  schema: { type: 'number', default: 0.3 },
+  init: function () {
+    var el = this.el, h = this.data;
+    el.addEventListener('model-loaded', function () {
+      var obj = el.getObject3D('mesh');
+      if (!obj) return;
+      el.object3D.scale.set(1, 1, 1);
+      el.object3D.position.set(0, 0, 0);
+      el.object3D.parent.updateMatrixWorld(true);
+      var box = new THREE.Box3().setFromObject(obj);
+      var size = new THREE.Vector3(), c = new THREE.Vector3(), pw = new THREE.Vector3();
+      box.getSize(size); box.getCenter(c);
+      el.object3D.parent.getWorldPosition(pw);
+      var s = h / size.y;
+      el.object3D.scale.set(s, s, s);
+      el.object3D.position.set(-(c.x - pw.x) * s, -h / 2 - (box.min.y - pw.y) * s, -(c.z - pw.z) * s);
+    });
+  }
+});
 
 // ---------- DATA ----------
 // kode resin: PET = 1, HDPE = 2, PP = 5
@@ -102,6 +125,8 @@ var TYPES = {
 };
 
 // geo: bentuk 3D sederhana. h = tinggi (untuk menaruh di meja)
+// Kalau punya model asli, tambahkan:  model: 'models/botol-air.glb'
+// Kalau file model tidak ada / gagal dimuat, otomatis pakai bentuk sederhana.
 var POOL = [
   { name: 'Botol air mineral', type: 'PET',  geo: 'cyl',  h: 0.28, r: 0.05, color: '#a9d6f5' },
   { name: 'Botol soda',        type: 'PET',  geo: 'cyl',  h: 0.32, r: 0.055, color: '#7fc8a9' },
@@ -185,6 +210,28 @@ function makeItem(def, x) {
   var common = { 'class': 'clickable item', 'data-name': def.name, 'data-type': def.type,
                  'data-y': y, position: x + ' ' + y + ' -1.4', color: def.color };
   var e;
+
+  // ----- A. pakai model 3D asli (.glb) -----
+  if (def.model) {
+    var w = (def.w || (def.r ? def.r * 2 : 0.12)) + 0.05;   // ukuran kotak klik
+    e = el('a-entity', {
+      'class': 'clickable item', 'data-name': def.name, 'data-type': def.type,
+      'data-y': y, position: x + ' ' + y + ' -1.4',
+      geometry: 'primitive: box; width: ' + w + '; height: ' + def.h + '; depth: ' + w,
+      material: 'opacity: 0; transparent: true; depthWrite: false'   // kotak tak terlihat, hanya untuk diklik
+    }, $('scene'));
+    var m = el('a-entity', { 'gltf-model': def.model, 'fit-height': def.h }, e);
+    // kalau model gagal dimuat -> tampilkan bentuk kotak berwarna
+    m.addEventListener('model-error', function () {
+      e.setAttribute('material', { opacity: 1, transparent: false, color: def.color, depthWrite: true });
+    });
+    // cincin kuning penanda "terpilih"
+    el('a-ring', { 'class': 'sel', 'radius-inner': 0.09, 'radius-outer': 0.12, rotation: '-90 0 0',
+                   position: '0 ' + (-def.h / 2 + 0.01) + ' 0', color: '#ffee00', visible: false }, e);
+    return e;
+  }
+
+  // ----- B. bentuk sederhana (cadangan) -----
   if (def.geo === 'cyl') {
     common.radius = def.r; common.height = def.h; e = el('a-cylinder', common, $('scene'));
   } else if (def.geo === 'cone') {
@@ -219,6 +266,7 @@ function deselect() {
   if (!S.selected) return;
   var it = S.selected;
   it.setAttribute('material', 'emissive', '#000000');
+  var r0 = it.querySelector('.sel'); if (r0) r0.setAttribute('visible', false);
   it.setAttribute('position', { x: it.object3D.position.x, y: parseFloat(it.getAttribute('data-y')), z: -1.4 });
   S.selected = null;
 }
@@ -227,6 +275,7 @@ function select(it) {
   S.selected = it;
   sfx('pick');
   it.setAttribute('material', { emissive: '#ffee00', emissiveIntensity: 0.7 });
+  var r1 = it.querySelector('.sel'); if (r1) r1.setAttribute('visible', true);
   it.setAttribute('position', { x: it.object3D.position.x, y: parseFloat(it.getAttribute('data-y')) + 0.12, z: -1.4 });
 }
 
@@ -254,20 +303,145 @@ function drawPanelBase(title) {
   el('a-plane', { width: 2.6, height: 1.7, color: '#1f2d3d', opacity: 0.93 }, p);
   el('a-text', { value: title, align: 'center', width: 3.4, color: '#ffffff', position: '0 0.65 0.02' }, p);
 }
+// ---------- MENU UTAMA (sesuai sketsa): header, menu 1-4, kotak 3D, MASUK VR / KELUAR ----------
+var SOUND = true;
+
+// ukuran teks otomatis supaya pas di lebar tombol
+function fitText(label, w) {
+  var n = Math.max(label.length, 3), wc = n + 4;
+  return { width: 0.9 * w * wc / n, 'wrap-count': wc };
+}
+function btn(label, act, x, y, w, h, color, idx) {
+  var b = el('a-plane', { 'class': 'clickable btn', 'data-act': act, width: w, height: h,
+                          position: x + ' ' + y + ' 0.03', color: color }, $('panel'));
+  if (idx !== undefined) b.setAttribute('data-i', idx);
+  var t = fitText(label, w);
+  el('a-text', { value: label, align: 'center', width: t.width, 'wrap-count': t['wrap-count'],
+                 color: '#ffffff', position: '0 0 0.01' }, b);
+}
+function pageBase(title) {
+  var p = $('panel');
+  clear(p);
+  el('a-plane', { width: 2.6, height: 1.7, color: '#1f2d3d', opacity: 0.95 }, p);
+  el('a-plane', { width: 2.5, height: 0.24, color: '#2b4660', position: '0 0.66 0.01' }, p);
+  var t = fitText(title, 1.6);
+  el('a-text', { value: title, align: 'center', width: t.width, 'wrap-count': t['wrap-count'],
+                 color: '#ffffff', position: '0 0.66 0.02' }, p);
+}
+function bodyText(str, y) {
+  el('a-text', { value: str, align: 'center', width: 2.2, 'wrap-count': 44, color: '#dfe9f3',
+                 position: '0 ' + (y === undefined ? 0.1 : y) + ' 0.02' }, $('panel'));
+}
+
 function showMenu() {
   S.mode = 'menu';
   $('hud').setAttribute('visible', false);
   clearItems();
-  drawPanelBase('PLASTISORT VR');
+  pageBase('PLASTISORT VR');
   var p = $('panel');
-  el('a-text', {
-    value: 'Pilah sampah plastik ke tempat yang benar!\n\n' +
-           'PET (1): botol minuman\nHDPE (2): botol deterjen/susu, jeriken\nPP (5): gelas, wadah makanan, sedotan\n\n' +
-           'Klik sampah, lalu klik tempat sampahnya.',
-    align: 'center', width: 2.3, "wrap-count": 46, color: '#dfe9f3', position: '0 0.05 0.02'
-  }, p);
-  button('MULAI', 'start', 0, -0.62, '#27ae60');
+
+  // menu samping 1-4
+  [['1  Panduan', 'guide'], ['2  Kuis', 'quiz'], ['3  Papan Skor', 'board'], ['4  Pengaturan', 'settings']]
+    .forEach(function (m, i) { btn(m[0], m[1], -0.98, 0.36 - i * 0.27, 0.56, 0.22, '#3d5a73'); });
+
+  // kotak tengah: pratinjau 3D (botol berputar)
+  el('a-plane', { width: 1.76, height: 0.9, color: '#4a6a85', position: '0.27 0.04 0.01' }, p);
+  el('a-plane', { width: 1.72, height: 0.86, color: '#0f1a24', position: '0.27 0.04 0.015' }, p);
+  var tl = fitText('adegan 3D', 0.45);
+  el('a-text', { value: 'adegan 3D', align: 'left', width: tl.width, 'wrap-count': tl['wrap-count'],
+                 color: '#9fb6c9', position: '-0.55 0.41 0.02' }, p);
+  var g = el('a-entity', { position: '0.27 0 0.12', scale: '1.15 1.15 1.15',
+    animation: 'property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 7000; easing: linear' }, p);
+  el('a-cylinder', { radius: 0.09, height: 0.3, position: '0 -0.05 0', color: '#a9d6f5', opacity: 0.9 }, g);
+  el('a-cylinder', { radius: 0.093, height: 0.1, position: '0 -0.05 0', color: '#ffffff' }, g);
+  el('a-cone', { 'radius-bottom': 0.09, 'radius-top': 0.035, height: 0.1, position: '0 0.15 0', color: '#a9d6f5', opacity: 0.9 }, g);
+  el('a-cylinder', { radius: 0.035, height: 0.05, position: '0 0.225 0', color: '#a9d6f5' }, g);
+  el('a-cylinder', { radius: 0.042, height: 0.04, position: '0 0.265 0', color: '#d35400' }, g);
+
+  // tombol bawah
+  btn('MASUK VR', 'enter', -0.17, -0.6, 0.8, 0.26, '#27ae60');
+  btn('KELUAR', 'exit', 0.73, -0.6, 0.8, 0.26, '#c0392b');
 }
+
+function showGuide() {
+  pageBase('PANDUAN');
+  bodyText('Pilah sampah plastik ke tempat yang benar.\n\n1. Klik sampah di konveyor.\n2. Klik tempat sampah sesuai jenisnya.\n3. Benar +10 poin.\n4. Waktu 60 detik.\n\nPET (1): botol minuman\nHDPE (2): botol deterjen/susu, jeriken\nPP (5): gelas, wadah makanan, sedotan', 0.08);
+  btn('KEMBALI', 'menu', 0, -0.68, 0.8, 0.24, '#7f8c8d');
+}
+function showBoard() {
+  pageBase('PAPAN SKOR');
+  var b = loadBoard(), s = b.length ? '' : 'Belum ada skor.\nMainkan dulu!';
+  b.forEach(function (v, i) { s += (i ? '\n' : '') + (i + 1) + '.  ' + v; });
+  bodyText(s, 0.1);
+  btn('KEMBALI', 'menu', 0, -0.68, 0.8, 0.24, '#7f8c8d');
+}
+function showSettings() {
+  pageBase('PENGATURAN');
+  btn('Suara: ' + (SOUND ? 'HIDUP' : 'MATI'), 'sound', 0, 0.22, 1.3, 0.26, SOUND ? '#27ae60' : '#7f8c8d');
+  btn('Hapus papan skor', 'clearboard', 0, -0.14, 1.3, 0.26, '#c0392b');
+  btn('KEMBALI', 'menu', 0, -0.62, 0.8, 0.24, '#7f8c8d');
+}
+function doExit() {
+  try { if (scene.is('vr-mode')) scene.exitVR(); } catch (e) {}
+  pageBase('SAMPAI JUMPA');
+  bodyText('Terima kasih sudah bermain PlastiSort VR!\n\nPilah sampah plastik di rumah juga ya.', 0.15);
+  btn('MENU', 'menu', 0, -0.62, 0.8, 0.24, '#27ae60');
+}
+
+// ---------- KUIS ----------
+var QUIZ = [
+  { q: 'Plastik PET punya kode daur ulang nomor berapa?', o: ['1', '2', '5'], a: 0, e: 'PET = kode 1, contohnya botol air mineral.' },
+  { q: 'Botol deterjen dan jeriken umumnya terbuat dari plastik jenis apa?', o: ['PET', 'HDPE', 'PP'], a: 1, e: 'HDPE = kode 2, plastik kuat untuk botol deterjen dan jeriken.' },
+  { q: 'Gelas plastik dan wadah makanan umumnya terbuat dari?', o: ['PET', 'HDPE', 'PP'], a: 2, e: 'PP = kode 5, tahan panas sehingga dipakai untuk wadah makanan.' },
+  { q: 'Plastik dengan kode 2 adalah jenis apa?', o: ['PET', 'HDPE', 'PP'], a: 1, e: 'Kode 2 = HDPE.' },
+  { q: 'Botol air mineral umumnya terbuat dari?', o: ['PET', 'HDPE', 'PP'], a: 0, e: 'Botol air mineral dan soda terbuat dari PET.' }
+];
+var Q = { i: 0, score: 0 };
+function showQuiz(i) {
+  if (i === 0) Q.score = 0;
+  Q.i = i;
+  var k = QUIZ[i];
+  pageBase('KUIS ' + (i + 1) + '/' + QUIZ.length);
+  bodyText(k.q, 0.3);
+  k.o.forEach(function (o, j) { btn(o, 'ans', -0.8 + j * 0.8, -0.15, 0.72, 0.28, '#3d5a73', j); });
+  btn('MENU', 'menu', 0, -0.68, 0.6, 0.22, '#7f8c8d');
+}
+function answerQuiz(j) {
+  var k = QUIZ[Q.i], ok = (j === k.a);
+  if (ok) Q.score++;
+  sfx(ok ? 'ok' : 'bad');
+  pageBase('KUIS ' + (Q.i + 1) + '/' + QUIZ.length);
+  bodyText((ok ? 'BENAR!' : 'SALAH.') + '\n\n' + k.e, 0.2);
+  btn(Q.i + 1 >= QUIZ.length ? 'LIHAT HASIL' : 'LANJUT', 'next', 0, -0.5, 0.9, 0.26, '#27ae60');
+}
+function quizResult() {
+  pageBase('HASIL KUIS');
+  bodyText('Skor kuis: ' + Q.score + ' dari ' + QUIZ.length + '\n\n' +
+    (Q.score === QUIZ.length ? 'Sempurna! Kamu ahli daur ulang.' : 'Coba lagi untuk skor lebih tinggi.'), 0.2);
+  btn('ULANGI KUIS', 'quiz', -0.5, -0.62, 1.0, 0.26, '#27ae60');
+  btn('MENU', 'menu', 0.6, -0.62, 0.7, 0.26, '#7f8c8d');
+}
+
+// ---------- aksi semua tombol ----------
+function doAct(t) {
+  var act = t.getAttribute('data-act');
+  if (act === 'enter') {
+    try { if (!scene.is('vr-mode')) { var pr = scene.enterVR(); if (pr && pr.catch) pr.catch(function () {}); } } catch (e) {}
+    startGame();
+  }
+  else if (act === 'start') startGame();
+  else if (act === 'menu') showMenu();
+  else if (act === 'guide') showGuide();
+  else if (act === 'quiz') showQuiz(0);
+  else if (act === 'ans') answerQuiz(parseInt(t.getAttribute('data-i'), 10));
+  else if (act === 'next') { if (Q.i + 1 >= QUIZ.length) quizResult(); else showQuiz(Q.i + 1); }
+  else if (act === 'board') showBoard();
+  else if (act === 'settings') showSettings();
+  else if (act === 'sound') { SOUND = !SOUND; showSettings(); }
+  else if (act === 'clearboard') { try { localStorage.removeItem('plastisort_lb'); } catch (e) {} showSettings(); }
+  else if (act === 'exit') doExit();
+}
+
 function showResult() {
   S.mode = 'result';
   $('hud').setAttribute('visible', false);
@@ -304,6 +478,7 @@ function endGame() {
 // ---- suara sederhana (tanpa file, dibuat dengan WebAudio) ----
 var AC = null;
 function tone(freq, start, dur, type, vol) {
+  if (!SOUND) return;
   try {
     if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') AC.resume();
@@ -367,9 +542,7 @@ scene.addEventListener('click', function (ev) {
   var t = ev.target;
   if (!t || !t.classList) return;
   if (t.classList.contains('btn')) {
-    var act = t.getAttribute('data-act');
-    if (act === 'start') startGame();
-    if (act === 'menu') showMenu();
+    doAct(t);
   } else if (S.mode === 'play' && t.classList.contains('item')) {
     select(t);
   } else if (S.mode === 'play' && t.classList.contains('bin')) {
