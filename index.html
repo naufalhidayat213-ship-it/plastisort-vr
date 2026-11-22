@@ -128,15 +128,15 @@ var TYPES = {
 // Kalau punya model asli, tambahkan:  model: 'models/botol-air.glb'
 // Kalau file model tidak ada / gagal dimuat, otomatis pakai bentuk sederhana.
 var POOL = [
-  { name: 'Botol air mineral', type: 'PET',  geo: 'cyl',  h: 0.28, r: 0.05, color: '#a9d6f5' },
-  { name: 'Botol soda',        type: 'PET',  geo: 'cyl',  h: 0.32, r: 0.055, color: '#7fc8a9' },
-  { name: 'Botol jus',         type: 'PET',  geo: 'cyl',  h: 0.24, r: 0.05, color: '#f5c46b' },
-  { name: 'Botol deterjen',    type: 'HDPE', geo: 'box',  h: 0.30, w: 0.14, color: '#e8e8f0' },
-  { name: 'Jeriken',           type: 'HDPE', geo: 'box',  h: 0.30, w: 0.2,  color: '#f3f0c8' },
-  { name: 'Botol susu',        type: 'HDPE', geo: 'cyl',  h: 0.26, r: 0.06, color: '#ffffff' },
-  { name: 'Gelas plastik',     type: 'PP',   geo: 'cone', h: 0.14, r: 0.06, color: '#f2f2f2' },
-  { name: 'Wadah makanan',     type: 'PP',   geo: 'flat', h: 0.08, w: 0.22, color: '#e74c3c' },
-  { name: 'Sedotan',           type: 'PP',   geo: 'cyl',  h: 0.30, r: 0.015, color: '#f1c40f' }
+  { name: 'Botol air mineral', type: 'PET',  model: 'models/botol-air.glb',  geo: 'cyl',  h: 0.28, r: 0.05,  color: '#a9d6f5' },
+  { name: 'Botol soda',        type: 'PET',  model: 'models/botol-soda.glb', geo: 'cyl',  h: 0.32, r: 0.055, color: '#7fc8a9' },
+  { name: 'Botol jus',         type: 'PET',  model: 'models/botol-jus.glb',  geo: 'cyl',  h: 0.24, r: 0.05,  color: '#f5c46b' },
+  { name: 'Botol deterjen',    type: 'HDPE', model: 'models/deterjen.glb',   geo: 'box',  h: 0.30, w: 0.14,  color: '#e8e8f0' },
+  { name: 'Jeriken',           type: 'HDPE', model: 'models/jeriken.glb',    geo: 'box',  h: 0.30, w: 0.2,   color: '#f3f0c8' },
+  { name: 'Botol susu',        type: 'HDPE', model: 'models/botol-susu.glb', geo: 'cyl',  h: 0.26, r: 0.06,  color: '#ffffff' },
+  { name: 'Gelas plastik',     type: 'PP',   model: 'models/gelas.glb',      geo: 'cone', h: 0.14, r: 0.06,  color: '#f2f2f2' },
+  { name: 'Wadah makanan',     type: 'PP',   model: 'models/wadah.glb',      geo: 'flat', h: 0.08, w: 0.22,  color: '#e74c3c' },
+  { name: 'Sedotan',           type: 'PP',   model: 'models/sedotan.glb',    geo: 'cyl',  h: 0.30, r: 0.015, color: '#f1c40f' }
 ];
 
 var ROUND_ITEMS = 6;     // jumlah sampah tiap ronde
